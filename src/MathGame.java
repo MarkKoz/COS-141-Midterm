@@ -201,12 +201,10 @@ public class MathGame {
 	public static void printMessage(String string, String style) {
 		char blockPrimary = '▓';
 		char blockSecondary = '▒';
-
 		final int max = 78;
 		int length = string.length();
 		int appendNum = (max - length - 6);
 		int index = 1;
-
 		StringBuilder output = new StringBuilder(max);
 		StringBuilder bar = new StringBuilder(max);
 
@@ -247,11 +245,11 @@ public class MathGame {
 	}
 
 	public static void printMessage(String[] strings, String style) {
-		final int max = 78;
-		StringBuilder bar = new StringBuilder(max);
 		char blockPrimary = '▓';
 		char blockSecondary = '▒';
-		int length = 0;
+		final int max = 78;
+		int longest = 0;
+		StringBuilder bar = new StringBuilder(max);
 
 		if (style.equals("light")) { // Better if I could use optional param
 			blockPrimary = '▒';
@@ -265,52 +263,52 @@ public class MathGame {
 		System.out.println("\n" + bar);
 
 		for (String line : strings) {
-			if (line.length() > length) {
-				length = line.length();
+			if (line.length() > longest) {
+				longest = line.length();
 			}
 		}
 
 		for (String line : strings) {
-			int length2 = line.length();
-			int appendNum = (max - length - 6);
-			int appendNum2 = (max - length2 - 6);
-			int appendNum3;
+			int length = line.length();
+			int indexLongest = (max - longest - 6);
+			int indexLength = (max - length - 6);
+			int indexEnd;
 			int index = 1;
 
 			StringBuilder output = new StringBuilder(max);
 
 			output.append(blockPrimary);
 
-			while (index < (appendNum / 2) + 1) {
+			while (index < (indexLongest / 2) + 1) {
 				output.insert(index, blockSecondary);
 				index ++;
 			}
 
-			if (length % 2 == 0) {
-				appendNum3 = index - 1;
+			if (longest % 2 == 0) {
+				indexEnd = index - 1;
 			} else {
-				appendNum3 = index;
+				indexEnd = index;
 			}
 
 			output.insert(index, blockPrimary + " ");
 			index += 2;
 
-			if (length2 < length) {
-				while (index < (appendNum2 / 2) + 3) {
+			if (length < longest) {
+				while (index < (indexLength / 2) + 3) {
 					output.insert(index, " ");
 					index ++;
 				}
 			}
 
 			output.insert(index, line);
-			if (length2 < length) {
-				index += length2;
-			} else {
+			if (length < longest) {
 				index += length;
+			} else {
+				index += longest;
 			}
 
-			if (length2 < length) {
-				while (index < (max - appendNum3 - 3)) {
+			if (length < longest) {
+				while (index < (max - indexEnd - 3)) {
 					output.insert(index, " ");
 					index ++;
 				}
@@ -341,12 +339,96 @@ public class MathGame {
 
 	public static void printTable(String[][] rows) {
 		final int max = 78;
+		String[][] columns = getColumns(rows);
 
-		for (String[] row:rows) {
-			/*for (String element:row) {
-				System.out.println(element);
-			}*/
+		for (int index = 0; index < rows.length; index ++) {
+			String[] row = rows[index];
+			StringBuilder topBorder = new StringBuilder();
+			StringBuilder innerBorder = new StringBuilder();
+			StringBuilder botBorder = new StringBuilder();
+			StringBuilder rowOut = new StringBuilder();
+
+			for (int indexCell = 0; indexCell < row.length; indexCell ++) {
+				String cell = row[indexCell];
+				int length = cell.length();
+				int longest = 0;
+
+				for (String indexColCell:columns[indexCell]) {
+					if (indexColCell.length() > longest) {
+						longest = indexColCell.length();
+					}
+				}
+
+				if (indexCell == 0) {
+					topBorder.append("╔═");
+					innerBorder.append("╠═");
+					botBorder.append("╚═");
+				} else {
+					topBorder.append("╦═");
+					innerBorder.append("╬═");
+					botBorder.append("╩═");
+				}
+				rowOut.append("║ ");
+
+				rowOut.append(cell);
+				while (topBorder.length() < rowOut.length()) {
+					topBorder.append("═");
+					innerBorder.append("═");
+					botBorder.append("═");
+				}
+
+				int indexEnd = rowOut.length() + longest - length + 1;
+				while (rowOut.length() < indexEnd) {
+					topBorder.append("═");
+					innerBorder.append("═");
+					botBorder.append("═");
+					rowOut.append(" ");
+				}
+			}
+
+			topBorder.append("╗");
+			innerBorder.append("╣");
+			botBorder.append("╝");
+			rowOut.append("║");
+
+			int indexCentre = (max - rowOut.length()) / 2;
+			while (rowOut.length() + indexCentre < max) {
+				topBorder.insert(0, " ");
+				innerBorder.insert(0, " ");
+				botBorder.insert(0, " ");
+				rowOut.insert(0, " ");
+			}
+
+			if (index == 0) {
+				System.out.println(topBorder.toString());
+				System.out.println(rowOut.toString());
+				System.out.println(innerBorder.toString());
+			} else if (index == rows.length - 1) {
+				System.out.println(rowOut.toString());
+				System.out.println(botBorder.toString());
+			} else {
+				System.out.println(rowOut.toString());
+				System.out.println(innerBorder.toString());
+			}
 		}
+	}
+
+	public static String[][] getColumns (String[][] rows) {
+		int count = 0;
+		String[][] columns = new String[rows[1].length][];
+
+		do {
+			String[] col = new String[rows.length];
+
+			for (int index = 0; index < rows.length; index ++) {
+				System.arraycopy(rows[index], count, col, index, 1);
+			}
+
+			columns[count] = col;
+			count ++;
+		} while (count < rows[1].length);
+
+		return columns;
 	}
 }
 
@@ -539,18 +621,13 @@ class Stats {
 		String[] stats = get(name, true);
 
 		if (stats != null) {
-			/*MathGame.printMessage(new String[]{
-							"Name: " + stats[0],
-							"Correct: " + stats[1],
-							"Wrong: " + stats[2],
-							"Earnings: " + stats[3]},
-					"bold");*/
 			String[] row0 = {"Name", stats[0]};
 			String[] row1 = {"Correct", stats[1]};
 			String[] row2 = {"Wrong", stats[2]};
 			String[] row3 = {"Earnings", stats[3]};
 			String[][] rows = {row0, row1, row2, row3};
 
+			MathGame.printMessage("Statistics", "bold");
 			MathGame.printTable(rows);
 			MathGame.Continue(name, true);
 		}
